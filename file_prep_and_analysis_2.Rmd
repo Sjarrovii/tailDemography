@@ -42,7 +42,7 @@ Now that the data have been read into R as elements in the list *mydata*, if we 
 lapply(mydata,head)
 ```
 in the columns, we see that we will need to clean the data by:
-
+#FIX this - update the text below.
 -*removing empty columns*
 -*changing all column names and entries to lowercase*: this standardizes species and sex entries.
 -*correcting values in "tl" and "rtl" that have "(", ")", or "-". where they shouldn't be*
@@ -79,103 +79,50 @@ print(lapply(mydata_trim,names))
         -For now, unless we have reason to tackle this, we won't develop this approach.
         
 
-#Change all column names and entries to lowercase*: this standardizes species and sex entries.
+#Change all column names to lowercase.
 ```{r, include=FALSE}
 for(i in 1:length(mydata)){ #change all colnames to lowercase
   names(mydata_trim[[i]])<-tolower(names(mydata_trim[[i]]))
 }
-# change all entries to lowercase
-## FIX this - make this only apply to "sex" and "species"
-for(i in 1:length(mydata_trim)){
-    for(j in 1:ncol(mydata_trim[[i]])){
-        mydata_trim[[i]][,j]<-tolower(mydata_trim[[i]][,j])
-    }
-}
 ```
+
 
 #Here is where I think we should search for "-" in the "tl" and "rtl" columns and individually correct them.
 
-First we'll have to standardize the names of the "tl" and "rtl" columns
+First we'll have to standardize the names of the "tl" and "rtl" columns.  First we will search for colnames containing "rtl" and temporarily change them to "rxl".  
 ```{r}
-#RESUME HERE
-tl_rtl<-lapply(mydata_trim,function(x) grep(pattern = "tl",x = names(x),ignore.case = T,value = T))
-lapply(tl_rtl,function(x)is.element(c("tl","rtl"),x)==c(1,1))
-```
-
-Since this only happens for one element in the list (i.e., for one year), we will use the following brute force method to address the columsn names in that year.
-```{r}
-names(mydata_trim[[11]])[which(names(mydata_trim[[11]])=="tl..mm.")]<-"tl"
-names(mydata_trim[[11]])[which(names(mydata_trim[[11]])=="rtl..mm.")]<-"rtl"
-names(mydata_trim[[11]])[which(names(mydata_trim[[11]])=="svl..mm.")]<-"svl"
-names(mydata_trim[[11]])
-```
-
-```{r}
-for(i in 1:length(mydata_trim)){
-        mydata_trim[[i]][,"tl"]<-gsub(pattern = "-",replacement = "",x = mydata_trim[[i]][,"tl"])
-}
-wrongDash_rtl<-unique(unlist(lapply(mydata_trim,function(x) unique(grep(pattern = " |-|\\(|\\)",x = x$rtl,value = T)))))
-wrongDash_rtl<-wrongDash_rtl[which(wrongDash_rtl!="-1")]
-wrongDash_tl<-unique(unlist(lapply(mydata_trim,function(x) unique(grep(pattern = " |-|\\(|\\)",x = x$tl, value = T)))))
-wrongDash_svl<-unique(unlist(lapply(mydata_trim,function(x) unique(grep(pattern = " |-|\\(|\\)",x = x$svl, value = T)))))
-```
-Let's take a look at the problematic values and replace them with appropriate ones.
-```{r}
-print(wrongDash_rtl)
-print(wrongDash_tl)
-print(wrongDash_svl)
-for(i in 1:length(mydata_trim)){
-        for(j in 1:nrow(mydata_trim[[i]])){
-                if(is.na(mydata_trim[[i]][j,"rtl"])){
-                        next()
-                        }else{
-                                if(mydata_trim[[i]][j,"rtl"]=="-"){
-                                        mydata_trim[[i]][j,"rtl"]<-NA
-                                }
-                                if(mydata_trim[[i]][j,"rtl"]=="32 -12"){
-                                        mydata_trim[[i]][j,"rtl"]<-"32"
-                                }
-                                if(mydata_trim[[i]][j,"rtl"]=="10(kink)"){
-                                        mydata_trim[[i]][j,"rtl"]<-"10"
-                                }
-                        }
-                if(is.na(mydata_trim[[i]][j,"tl"])){
-                        next()
-                        }else{
-                                if(mydata_trim[[i]][j,"tl"]=="56 (42)"){
-                                        mydata_trim[[i]][j,"tl"]<-"56"
-                                }
-                        }
-                if(is.na(mydata_trim[[i]][j,"svl"])){
-                        next()
-                        }else{
-                                if(mydata_trim[[i]][j,"svl"]=="-"){
-                                        mydata_trim[[i]][j,"svl"]<-NA
-                                }
-        }
+rxl<-lapply(mydata_trim,function(x) grep(pattern = "rtl", x = names(x),ignore.case = T))
+for(i in 1:length(rxl)){
+        names(mydata_trim[[i]])[rxl[[i]]]<-"rxl"
 }
 ```
 
-##Assign variables(columns) to appropriate classes, where necessary
-By executing the code chunk below, we see that in all of the columns have been forced to be character vector. 
-
+Next we will search for all colnames containing "tl" and change them to "tl".
 ```{r}
-# rm(mydata)
-for(i in 1:length(mydata_trim)){print(apply(mydata_trim[[i]],2,class))}
+tl<-lapply(mydata_trim,function(x) grep(pattern = "tl", x = names(x),ignore.case = T))
+for(i in 1:length(tl)){
+        names(mydata_trim[[i]])[tl[[i]]]<-"tl"
+}
 ```
 
-We won't address this here, because it will be easier to handle once most of the extraneous columns have been removed and the column names standardized.
+Then we will change all colnames "rxl" to "rtl".
+```{r}
+for(i in 1:length(mydata_trim)){
+        names(mydata_trim[[i]])[which(names(mydata_trim[[i]])=="rxl")]<-"rtl"
+}
+```
 
 ##Standardize variable names
 Next we need to drop extraneous variables.  By extraneous, we mean those variables (column headings) which are not common across files to a particular year. We will achieve this by first creating a character vector populated with the names of the variables we wish to keep and converting it a single string vector of the same names separated by "|". That string will be used to identify variables which should be excluded or kept. 
 
 This portion renames/standardizes variable names which we wish to keep. *Note: This code needs to to have *replace_names* supplied by hand.*
 ```{r, include=TRUE}
-keepnames<-c("species", "toes","date","sex","svl","tl","rtl","mass","paint.mark","location","meters","new.recap","vial","painted","misc")
-
+keepnames<-c("species", "toes","date","sex","svl","mass","paint.mark","location","meters","new.recap","vial","painted","misc")
+tl_rtl<-"tl|rtl"
+#removed "tl" and "rtl" from this b/c they were treated earlier and including them here changes them all to "tl".
 p.keepnames<-c()
 for(name in keepnames){p.keepnames<-paste(p.keepnames,name,"|",sep = "")}
-p.keepnames<-substr(p.keepnames,1,nchar(p.keepnames)-1)
+p.keepnames<-substr(p.keepnames,1,nchar(p.keepnames)-1) #removes trailing "|".
 
 rawnames<-lapply(mydata_trim,names)#original names for each year's data
 
@@ -183,64 +130,25 @@ mydata_vars<-list()#will eventually only contain columns with variable names tha
 droppedvar<-list() #Will eventually only contain variables dropped from mydata to create mydata_goodNames
 for(i in 1:length(rawnames)){
     for(j in 1:length(rawnames[[i]])){
-        if(length(grep(pattern = p.keepnames,x=rawnames[[i]][j])>0)){
-            for(name in keepnames){
-                if(length(grep(pattern= name,x=rawnames[[i]][j]))>0){
-                    rawnames[[i]][j]<-name
-                }
+            if(length(grep(pattern = "tl|rtl",x=rawnames[[i]][j]))>0){
+                    next()
             }
+            if(length(grep(pattern = p.keepnames,x=rawnames[[i]][j])>0)){
+                    for(name in keepnames){
+                            if(length(grep(pattern= name,x=rawnames[[i]][j]))>0){
+                                    rawnames[[i]][j]<-name
+                            }
+                    }
             }else{
-                rawnames[[i]][j]<-"DROP"
+                    rawnames[[i]][j]<-"DROP"
             }
     }
-    droppedvar[[i]]<-mydata_trim[[i]][,which(rawnames[[i]]=="DROP")]#creates new list with dropped variables
-    names(droppedvar[[i]])<-rawnames[[i]][which(rawnames[[i]]=="DROP")]#attaches names to droppedvar
-    mydata_vars[[i]]<-mydata_trim[[i]][,which(rawnames[[i]]!="DROP")]#creates new list with kept variables
-    names(mydata_vars[[i]])<-rawnames[[i]][which(rawnames[[i]]!="DROP")]#attaches mapped names to mydata_goodNames
+        droppedvar[[i]]<-mydata_trim[[i]][,which(rawnames[[i]]=="DROP")]#creates new list with dropped variables
+        names(droppedvar[[i]])<-rawnames[[i]][which(rawnames[[i]]=="DROP")]#attaches names to droppedvar
+        mydata_vars[[i]]<-mydata_trim[[i]][,which(rawnames[[i]]!="DROP")]#creates new list with kept variables
+        names(mydata_vars[[i]])<-rawnames[[i]][which(rawnames[[i]]!="DROP")]#attaches mapped names to mydata_vars
 }
 #print(lapply(mydata_vars, names))
-```
-
-If we change "include" argument to "TRUE" in the above chunk and run it again, We can see that "tl" substituted "rtl" and "tl" variables.  We will try to correct this by looking at the minimum values in the columns for each year and, for those variable with a minimum of 0 or less, we can change the variable name to "rtl". 
-Before we do this, let us address the issue of reassigning classes of the columns.  We will address this here using the applying the class() function to those items which need to be changed.  Based on the standardized names in each year,
-
-A class of "character" is appropriate for all columns except "svl", "tl", "mass", and "meters".  These are the columns which need to be assigned the class "numeric".
-
-```{r,include=FALSE}
-lapply(mydata_vars,names)
-bar<-c("svl","tl","rtl","mass","meters")
-lapply(mydata_vars,function(x) x[,"svl"]<-as.numeric(x[,"svl"]))
-lapply(mydata_vars,function(x) x[,"rtl"]<-as.numeric(x[,"rtl"]))
-lapply(mydata_vars,function(x) x[,"mass"]<-as.numeric(x[,"mass"]))
-lapply(mydata_vars,function(x) x[,"meters"]<-as.numeric(x[,"meters"]))
-for(i in 1:length(mydata_vars)){print(apply(mydata_vars[[i]],2,class))}
-```
-
-```{r, include=TRUE}
-for(i in 1:length(mydata_vars)){
-    for(j in 1:length(mydata_vars[[i]])){
-        if(names(mydata_vars[[i]][j])=="tl"){
-            if(min(mydata_vars[[i]][,j],na.rm = T)<=0){
-                names(mydata_vars[[i]])[j]<-"rtl"
-                print(names(mydata_vars[[i]][j]))
-            }
-        }
-    }
-}
-names(mydata_vars[[5]])[6]<-"tl"
-lapply(mydata_vars,function(x) x[,"tl"]<-as.numeric(x[,"tl"]))
-lapply(mydata_vars,function(x) x[,"rtl"]<-as.numeric(x[,"rtl"]))
-```
-We need to inspect the 5th element in mydata_vars to see why the names "rtl" appears instead of "tl" and "rtl".
-```{r}
-class(mydata_vars[[5]][,7])
-unique(mydata_vars[[5]][,7])
-mydata_vars[[5]][which(mydata_vars[[5]][,6]==""),]
-#this will be dropped in cleaning anyway, but a brute force fix will allow us to move forward 
-mydata_vars[[5]][which(mydata_vars[[5]][,"rtl"]==""),"rtl"]<-NA
-mydata_vars[[5]][374,"svl"]<-NA
-mydata_vars[[5]][374,]
-# unique(mydata_vars[[5]][,"rtl.1"])
 ```
 
 Now we name add the variable year to each element of the list according the year of data that each element contains.
@@ -255,7 +163,69 @@ for(i in 1:length(mydata_vars)){
         mydata_vars[[i]][,"year"]<-myyears[i]
         }
 ```
+##Move data to a data frame for analysis*
 
+Now we create a data frame, mycombfile on which analyses will be conducted and reclassify the appropriate variables as numeric variable.  For some reason, they were classified as character vectors during the population of the data.frame.
+
+First, we will coerce all data to character class to facilitate the merge.  This step can probably be dropped, if the source files have consistent formatting for similar columns.  We will creat a function to do this and then apply the function to each level in the list (i.e. each year)
+```{r}
+forceChar<-function(x){
+        if(is.data.frame(x)==T){
+                apply(x,2,as.character)
+        }else{
+                as.character(x)
+        }
+}
+mydata_vars<-lapply(mydata_vars,forceChar)
+```
+
+Then we will merge the elements of mydata_vars into a single df
+```{r}
+mycombfile<-data.frame()
+for(i in 1:length(mydata_vars)){
+    mycombfile<-rbind(mycombfile,mydata_vars[[i]])
+}
+```
+
+A few more cleaning steps:
+# Standardize values in sex, species, painted, and new.recap
+First, we'll change all entries in sex, species, painted, and new.recap to lowercase.
+```{r}
+lowerCols<-grep("sex|species|painted|new.recap|toes",names(mycombfile))
+for(col in lowerCols){
+        mycombfile[,col]<-tolower(mycombfile[,col])
+}
+```
+Then we'll identify sex, species, painted, and new.recap values for review
+
+[sex values "male|female"->"m|f", species values "j|v"->"sj|sv", painted values "painted|yes" -> "P" and "[blank]|no" -> "N", new.recap values "new|n"->"N" and "recap|r"->"R".]
+```{r}
+mycombfile$review_sex<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$sex!="m" & mycombfile$sex!="f"),"review_sex"]<-T
+mycombfile$review_species<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$species!="sj" & mycombfile$species!="sv"),"review_species"]<-T
+mycombfile$review_painted<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T
+mycombfile$review_new.recap<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
+```
+# Change rtl to rtl_orig and create 2 new columns:
+- a new rtl column that only records how much tail has regrown (i.e. an intact animal and an animal which had autotmized, but has not regrown any tail would both have a value of 0 in this new rtl column)
+- a autotmized column that indicates if the tail shows signs of ever having autotomized any amount (i.e. both autotomized animals with and without any regrown would have a value of TRUE here, while intact animals would have a value of FALSE)
+```{r}
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)# from Stackoverflow https://stackoverflow.com/questions/2261079/how-to-trim-leading-and-trailing-whitespace-in-r
+names(mycombfile)[which(names(mycombfile)=="rtl")]<-"rtl_orig"
+mycombfile$rtl<-as.numeric(as.character(trim(trim(mycombfile$rtl_orig))))
+mycombfile[which(mycombfile$rtl==-1),"rtl"]<-0
+mycombfile$autotomized<-logical(nrow(mycombfile))
+mycombfile[which(!is.na(mycombfile$rtl_orig) & mycombfile$rtl_orig!="o" & mycombfile$rtl_orig!="0" & mycombfile$rtl_orig!=" 0"),"autotomized"]<-T #don't know why I have to explicitly exclude rtl_orig =" 0" after using trim function
+unique(mycombfile[which(mycombfile$autotomized==T),"rtl_orig"])
+```
+#identify rtl and tl values for review
+```{r}
+mycombfile$review_rtl<-logical(nrow(mycombfile))
+mycombfile[which(is.na(mycombfile$rtl) & !is.na(mycombfile$rtl_orig)),"review_rtl"]<-T
+```
 Here we drop unwanted data for:
     -species (those other than Sj and Sv)
     -those which do not have data for critical variables (species, svl, tl, rtl, toes)
@@ -263,18 +233,14 @@ We also handle data for toes:
     -where a letter was included in the entry to distinguish separate animals with the same toes removed. We do this by capturing the letter in a new variable, unique_id, and removing the letter from the toes column.
     -special characters and leading spaces or single quotes in toe data are removed
     -a character vector of binary representation of toe clip marking is generated from cleaned toes
-    
-##Move data to a data frame for analysis*
 
-Now we create a data frame, mycombfile on which analyses will be conducted and reclassify the appropriate variables as numeric variable.  For some reason, they were classified as character vectors during the population of the data.frame.
-```{r}
-mycombfile<-data.frame()
-for(i in 1:length(mydata_vars)){
-    mycombfile<-rbind(mycombfile,mydata_vars[[i]])
-}
 
-#reclassify date as date values
-```
+
+
+ We need to identify problematic values in all pertinent columns and deal with them appropriately, but this can wait for the mapping step after we merge the data into one df
+
+
+##Assign variables(columns) to appropriate classes, where necessary - this can also wait until data are merged into one df
 
 
 ```{r, include=FALSE}
