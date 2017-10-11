@@ -148,7 +148,7 @@ for(i in 1:length(rawnames)){
         mydata_vars[[i]]<-mydata_trim[[i]][,which(rawnames[[i]]!="DROP")]#creates new list with kept variables
         names(mydata_vars[[i]])<-rawnames[[i]][which(rawnames[[i]]!="DROP")]#attaches mapped names to mydata_vars
 }
-#print(lapply(mydata_vars, names))
+# print(lapply(mydata_vars, names))
 ```
 
 Now we name add the variable year to each element of the list according the year of data that each element contains.
@@ -179,7 +179,7 @@ forceChar<-function(x){
 mydata_vars<-lapply(mydata_vars,forceChar)
 ```
 
-Then we will merge the elements of mydata_vars into a single df
+Then we will merge the elements of mydata_vars into a single data frame
 ```{r}
 mycombfile<-data.frame()
 for(i in 1:length(mydata_vars)){
@@ -203,7 +203,8 @@ Then we'll identify sex, species, painted, and new.recap values for review
 mycombfile$review_sex<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$sex!="m" & mycombfile$sex!="f"),"review_sex"]<-T
 mycombfile$review_species<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$species!="sj" & mycombfile$species!="sv"),"review_species"]<-T
+mycombfile[grep("v|j|\\?",mycombfile$species),"review_species"]<-T 
+mycombfile[which(mycombfile$species=="sj"|mycombfile$species=="sv"|mycombfile$species=="v"|mycombfile$species=="j"),"review_species"]<-F
 mycombfile$review_painted<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T
 mycombfile$review_new.recap<-logical(nrow(mycombfile))
@@ -229,6 +230,13 @@ mycombfile[which(is.na(mycombfile$rtl) & !is.na(mycombfile$rtl_orig)),"review_rt
 Here we drop unwanted data for:
     -species (those other than Sj and Sv)
     -those which do not have data for critical variables (species, svl, tl, rtl, toes)
+We won't drop these now, but we will add a filter that marks them for drop
+```{r}
+mycombfile$drop_species<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$species!="sj"& mycombfile$species!="sv"& mycombfile$species!="v"& mycombfile$species!="j" & mycombfile$review_species==F),"drop_species"]<-T
+mycombfile$drop_morphometrics<-logical(nrow(mycombfile))
+mycombfile[which(is.na(mycombfile$species)|is.na(mycombfile$svl)|is.na(mycombfile$tl)|is.na(mycombfile$rtl_orig)|is.na(mycombfile$toes)),"drop_morphometrics"]<-T
+```
 We also handle data for toes:
     -where a letter was included in the entry to distinguish separate animals with the same toes removed. We do this by capturing the letter in a new variable, unique_id, and removing the letter from the toes column.
     -special characters and leading spaces or single quotes in toe data are removed
@@ -242,7 +250,7 @@ We also handle data for toes:
 
 ##Assign variables(columns) to appropriate classes, where necessary - this can also wait until data are merged into one df
 
-
+#Resume here.  we need to review data flagged by filters 
 ```{r, include=FALSE}
 #Eliminate entries for species other than Sj and Sv
 ind_SjSv<-grep('sv|sj|j|v',mycombfile[,"species"])
