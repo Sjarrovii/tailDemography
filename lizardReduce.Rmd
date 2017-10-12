@@ -1,0 +1,195 @@
+---
+title: "Lizard Reduce"
+output: html_notebook
+---
+#This file takes a mapped data file, reduces it and export the reduced file for later analysis
+
+RESUME HERE. Everything below this point  was copied from file_prep_and_analysis_2.Rmd before it became file prep and Mapping
+
+##Assign variables(columns) to appropriate classes, where necessary - this can also wait until data are merged into one df
+
+#Resume here.  we need to review data flagged by filters - Map Phase has ended.  Now we begin the Reduce phase.  In this phase, we'll reduce the size of the dataframe to only include those data which fit our criteria.
+```{r, include=FALSE}
+#Eliminate entries for species other than Sj and Sv
+##Eliminate entries without toes
+ind_toes<-which(!is.na(mycombfile[,"toes"])==T)
+mycombfile<-mycombfile[ind_toes,]
+nrow(mycombfile)
+
+
+# unique_id<-vector(mode = "character",length = nrow(mycombfile))
+
+# names(mycombfile)[length(mycombfile)]<-"unique_id"
+names(mycombfile)[which(names(mycombfile)=="toes")]<-"toes_orig"
+mycombfile[,"toes"]<-mycombfile[,"toes_orig"]
+
+my_a<-grep(pattern = "a",x = mycombfile["toes"],ignore.case = T)
+my_b<-grep(pattern = "b",x = mycombfile["toes"],ignore.case = T)
+
+mycombfile[my_a,"unique_id"]<-"a"
+mycombfile[my_b,"unique_id"]<-"b"
+table(mycombfile$unique_id)
+#eliminate letters from toes 
+
+#fix this, gsub calls don't seem to work
+for(i in 1:nrow(mycombfile)){
+        mycombfile[i,"toes"]<-gsub(pattern = "-a|-b| a| b|a|b",replacement = "",x = mycombfile[i,"toes"] ,fixed = F)
+}
+
+##Standardizing toes by making separators into " " 
+##replace single quotes and parentheses with nothing in toes column
+
+for(i in 1:nrow(mycombfile)){
+        mycombfile[i,"toes"]<-gsub(pattern="'|\\(|\\)|\\.000000|\\?|-\\?",replacement= "",x=mycombfile[i,"toes"],fixed = F)
+}
+
+## replace single spaces with a dash in toes column
+
+```
+ 
+ Now we fix "j" and "v" replacing them with "sj" and "sv", respectively.
+```{r}
+for(j in 1:nrow(mycombfile)){
+        if(mycombfile[j,"species"]=="j"){
+                mycombfile[j,"species"]<-"sj"
+        }
+        if(mycombfile[j,"species"]=="v"){
+                mycombfile[j,"species"]<-"sv"
+        }
+}
+
+speciesEntries<-unique(mycombfile[,"species"])
+print(speciesEntries)
+
+```
+
+The following chunk of code takes a long time (~2minutes to execute).  Figure out why and speed this up.
+```{r, include=FALSE}
+for(i in 1:nrow(mycombfile)){
+        mycombfile[i,"toes"]<-gsub(pattern="\\/| |\\/20| - |-0",replacement="-",x=mycombfile[i,"toes"],fixed = T)
+}
+
+print(nchar(mycombfile[1,"toes"]))
+print(mycombfile[1,"toes"])
+
+```
+
+
+```{r}
+for(j in 1:nrow(mycombfile)){
+        while(any(str_sub(mycombfile[j,"toes"],1L,1L)=="-| ")){
+                ##find any dashes that are the first character in an entry
+                ind_d1<-which(str_sub(mycombfile[j,"toes"],1L,1L)=="-| ")
+                ##removes 1st dash in entries 
+                mycombfile[ind_d1,"toes"]<-str_sub(mycombfile[ind_d1,"toes"],2)
+        }
+        while(any(str_sub(mycombfile[,"toes"],-1L,-1L)=="-| ")){
+                ##find any dashes that are the last character in an entry
+                ind_d2<-which(str_sub(mycombfile[,"toes"],-1L,-1L)=="-| ")
+                ##removes trailing dash in entries 
+                mycombfile[ind_d2,"toes"]<-str_sub(mycombfile[,"toes"][ind_d2],1L,-2)
+        }
+}
+```
+
+```{r}
+#FIX this part of the code currently
+##create column with binary representations of toe loss status for all 20 toes
+## 1= toe loss; 0 = no loss; e.g. is only toe 20 is missing, the 20th character 
+## will be 1 and all other chracters will be 0
+##create new column with class character containing a string of twenty zeros in each entry
+
+# rm(ind_noNA)
+# rm(ind_toes)
+# rm(ind_SjSv)
+
+mycombfile[,"toes_bin"]<-c()
+mycombfile[,"toes_bin"]="00000000000000000000"
+
+test<-list()
+for(j in nrow(mycombfile)){
+        test[[j]]<-strsplit(mycombfile[j,"toes"], split = "-")
+        }
+test[1]
+
+for(j in 1:nrow(mycombfile)){
+        my_toes_bar<-unlist(strsplit(as.character(mycombfile["toes"]), split = " |-"))#split arguement 
+        ntoe<-as.integer(my_toes_bar[])
+        substr(mycombfile[j,"toes_bin"],ntoe,ntoe)<-"1"
+        }
+        # rm(my_toes_bar)
+        # rm(ntoe)
+}
+length(mycombfile[which(is.na(mycombfile$toes_bin)),"toes_orig"])
+head(mycombfile[which(is.na(mycombfile[,"toes_bin"])),c("toes","toes_bin")])
+```
+
+```{r}
+#lapply(mydata_vars,function(x) table(x[,"toes_bin"]))# This is a check to see if the binary toe clip representations were generated properly for all files. There should be a lot of these and mostly unique within species.  This should, in fact, match the result of a similar operation on the numerical toes.
+```
+
+```{r}
+#deal with sex
+table(mycombfile$sex)
+
+## convert definite f values to f and m values to m
+mycombfile$sex<-gsub(pattern = "f ",replacement = "f",x = mycombfile$sex,ignore.case = T)
+mycombfile$sex<-gsub(pattern = "m |male|n",replacement = "m",x = mycombfile$sex,ignore.case = T)
+
+table(mycombfile$sex)
+```
+
+The operations here need to be determined based on the results of manual check(s).
+```{r}
+## check
+table(mycombfile$sex)
+
+##create a second sex column with only definite values
+mycombfile$sex_certain<-mycombfile$sex
+mycombfile$sex_certain<-gsub(pattern = "\\?|f\\?",replacement = NA,x = mycombfile$sex_certain,ignore.case = T)
+
+## check
+table(mycombfile$sex_certain)
+```
+
+We follow a similar proces for cleaning species data.
+```{r}
+# deal with species
+table(mycombfile$species)
+
+mycombfile[which(mycombfile$species=="sj?"),]
+mycombfile[which(mycombfile$toes=="4-10-19"),] 
+####decision: convert "sj?" to "sv"
+### convert definite sj values to sj
+mycombfile$species<-gsub(pattern = "sj\\?|sv ",replacement = "sv",x = mycombfile$species,ignore.case = T)
+mycombfile$species<-gsub(pattern = "sj ",replacement = "sj",x = mycombfile$species,ignore.case = T)
+table(mycombfile$species)#check
+```
+
+##Handling Duplicate Data
+Here we identify instances where the duplicate combinations of the critical variables species, sex, and toes occur within the same year. First we will create a categorical variable, tailcondition, which is determined by the magnitude and sign of the value in the RTL column. 
+```{r}
+mycombfile$tailcondition<-"Intact"
+mycombfile[which(mycombfile$rtl>0),"tailcondition"]<-"Regrown"
+mycombfile[which(mycombfile$rtl<0),"tailcondition"]<-"Autotomized"
+
+# mycomparables<-mycombfile[,c("species","toes_orig","sex_certain","year")]
+
+
+```
+Then we will create a variable that identifies whether or not an entries values for the critial variabels are found elsewhere within the entries for that year.
+```{r}
+mydupvalues<-mycombfile[which(duplicated(mycomparables)==T|duplicated(mycomparables,fromLast = T)==T),]#returns records for duplicated values
+nrow(mydupvalues)#Check
+
+mydupvalues<-mydupvalues[with(mydupvalues,order(year,sex_certain,toes_orig)),]#orders mydupvalues by year sex and toes
+mycombfile$dupInYear<-"No" #Create a new variable identifying duplicate data
+mycombfile[which(duplicated(mycomparables)==T|duplicated(mycomparables,fromLast = T)==T),"dupInYear"]<-"Yes"
+```
+
+write file to an .xlsx
+```{r}
+filename<- paste("Combined",min(mycombfile$year),max(mycombfile$year),".xlsx",sep = "_")
+write.xlsx(x = mycombfile,file =filename)
+```
+
