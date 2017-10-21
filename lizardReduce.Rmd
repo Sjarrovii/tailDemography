@@ -4,7 +4,37 @@ output: html_notebook
 ---
 #This file takes a mapped data file, reduces it and export the reduced file for later analysis
 
-RESUME HERE. Everything below this point  was copied from file_prep_and_analysis_2.Rmd before it became file prep and Mapping
+```{r setup,include=FALSE}
+# rm(list=ls()) #clears the environment
+# filefolder="G:/Lizard work for the road/excel files"
+filefolder="C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/Demography"
+knitr::opts_knit$set(root.dir = normalizePath(filefolder)) 
+#this is an option we have to use for RMD notebooks otherwise the wd is reset after each chunk is executed
+#setwd(filefolder) #this can be used instead for a regular rscript
+# options(pkgType = "source")
+mypackages=c("ggplot2","tables","knitr","xlsx","rJava") 
+neededpackages=mypackages[which(!is.element(el=mypackages,set=installed.packages()))]
+if(length(neededpackages>0)){
+    install.packages(neededpackages)
+}else{
+    warning("All packages already installed")
+}
+lapply(mypackages,function(x) library(x,character.only = T))
+```
+Read in a mapped data file and check names
+```{r}
+mdata<-read.xlsx2("mapped data.xlsx",sheetIndex = 1)
+names(mdata)
+str(mdata)
+```
+Create a review data frame and export to an excel file.
+```{r}
+reviewdata<-data.frame(mdata[which((mdata$review_new.recap==T|mdata$review_painted==T|mdata$review_rtl==T|mdata$review_sex==T|mdata$review_species==T)&(mdata$drop_morphometrics==F & mdata$drop_species==F)),])
+str(reviewdata)
+unique(reviewdata$species)
+write.xlsx2(reviewdata,"reviewdata.xlsx",showNA=T)
+```
+RESUME HERE. Everything below this point was copied from file_prep_and_analysis_2.Rmd before it became file prep and Mapping
 
 ##Assign variables(columns) to appropriate classes, where necessary - this can also wait until data are merged into one df
 

@@ -166,6 +166,7 @@ for(i in 1:length(mydata_vars)){
 # A few more cleaning and mapping steps:
 -*Standardizing values in sex, species, painted, and new.recap*
 -*Redefine rtl* 
+-*Convert blanks to NA in all columns*
 -*create tailcondition*
 -*create toesbin
 -*Identify data for review*
@@ -190,6 +191,18 @@ mycombfile[which(mycombfile$rtl==-1),"rtl"]<-0
 mycombfile$autotomized<-logical(nrow(mycombfile))
 mycombfile[which(!is.na(mycombfile$rtl_orig) & mycombfile$rtl_orig!="o" & mycombfile$rtl_orig!="0" & mycombfile$rtl_orig!=" 0"),"autotomized"]<-T #don't know why I have to explicitly exclude rtl_orig =" 0" after using trim function
 unique(mycombfile[which(mycombfile$autotomized==T),"rtl_orig"])
+```
+## Convert blanks to NA in all columns
+First create function that converts blank cells to NA
+```{r}
+blank2NA<-function(x){
+        x[which(as.character(x)=="")]<-NA
+        return(x)
+}
+```
+Then apply that function to the columns in mycombfile
+```{r}
+mycombfile<-as.data.frame(sapply(mycombfile,blank2NA))
 ```
 ## Create tailcondition
 ```{r}
@@ -218,16 +231,9 @@ Here we identify unwanted data and flagging:
 mycombfile$drop_species<-logical(nrow(mycombfile))
 mycombfile[which((substr(mycombfile$species,1,1)!="v" & (substr(mycombfile$species,1,1)!="j")& (substr(mycombfile$species,1,1)!="s"))| (substr(mycombfile$species,1,2)=="sc")| (substr(mycombfile$species,1,2)=="sn")),"drop_species"]<-T
 mycombfile[grep("\\?",mycombfile$species),"drop_species"]<-F
-# mycombfile[which(substr(mycombfile$species,1,1)!="s") ,"drop_species"]<-T
-# unique(mycombfile[which(mycombfile$drop_species==T),"species"])
-# mycombfile[which(substr(mycombfile$species,1,1)!="j"),"drop_species"]<-T
 unique(mycombfile[which(mycombfile$drop_species==T),"species"])
-# mycombfile[which(mycombfile$species=="sc"),"drop_species"]<-T
-# mycombfile[which(mycombfile$species=="sc "),"drop_species"]<-T
-# mycombfile[which(mycombfile$species=="sj"|substr(mycombfile$species,1,1)=="v"|substr(mycombfile$species,1,1)=="j"),"drop_species"]<-F
 mycombfile$drop_morphometrics<-logical(nrow(mycombfile))
 mycombfile[which(is.na(mycombfile$species)|is.na(mycombfile$svl)|is.na(mycombfile$tl)|is.na(mycombfile$rtl_orig)|is.na(mycombfile$toes)),"drop_morphometrics"]<-T
-unique(mycombfile[which(mycombfile$drop_species==T),"species"])
 ```
 ## Create toesbin
 We also handle data for toes:
@@ -241,5 +247,5 @@ We also handle data for toes:
 
 # Export mapped dataframe
 ```{r}
-write.xlsx2(mycombfile,"mapped data.xlsx")
+write.xlsx2(mycombfile,"mapped data.xlsx",showNA=T)
 ```
