@@ -201,10 +201,10 @@ unique(mycombfile[which(mycombfile$autotomized==T),"rtl_orig"])
 mycombfile$review_sex<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$sex!="m" & mycombfile$sex!="f"),"review_sex"]<-T
 mycombfile$review_species<-logical(nrow(mycombfile))
-mycombfile[grep("v|j|\\?",mycombfile$species),"review_species"]<-T 
-mycombfile[which(mycombfile$species=="sj"|mycombfile$species=="sv"|mycombfile$species=="v"|mycombfile$species=="j"),"review_species"]<-F
+mycombfile[grep("\\?",mycombfile$species),"review_species"]<-T 
+# mycombfile[which(mycombfile$species=="sj"|mycombfile$species=="sv"|mycombfile$species=="v"|mycombfile$species=="j"),"review_species"]<-F
 mycombfile$review_painted<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T
+mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T#many of these seem to belong in notes column
 mycombfile$review_new.recap<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
 mycombfile$review_rtl<-logical(nrow(mycombfile))
@@ -216,9 +216,18 @@ Here we identify unwanted data and flagging:
     -those which do not have data for critical variables (species, svl, tl, rtl, toes)
 ```{r}
 mycombfile$drop_species<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$species!="sj"& mycombfile$species!="sv"& mycombfile$species!="v"& mycombfile$species!="j" & mycombfile$review_species==F),"drop_species"]<-T
+mycombfile[which((substr(mycombfile$species,1,1)!="v" & (substr(mycombfile$species,1,1)!="j")& (substr(mycombfile$species,1,1)!="s"))| (substr(mycombfile$species,1,2)=="sc")| (substr(mycombfile$species,1,2)=="sn")),"drop_species"]<-T
+mycombfile[grep("\\?",mycombfile$species),"drop_species"]<-F
+# mycombfile[which(substr(mycombfile$species,1,1)!="s") ,"drop_species"]<-T
+# unique(mycombfile[which(mycombfile$drop_species==T),"species"])
+# mycombfile[which(substr(mycombfile$species,1,1)!="j"),"drop_species"]<-T
+unique(mycombfile[which(mycombfile$drop_species==T),"species"])
+# mycombfile[which(mycombfile$species=="sc"),"drop_species"]<-T
+# mycombfile[which(mycombfile$species=="sc "),"drop_species"]<-T
+# mycombfile[which(mycombfile$species=="sj"|substr(mycombfile$species,1,1)=="v"|substr(mycombfile$species,1,1)=="j"),"drop_species"]<-F
 mycombfile$drop_morphometrics<-logical(nrow(mycombfile))
 mycombfile[which(is.na(mycombfile$species)|is.na(mycombfile$svl)|is.na(mycombfile$tl)|is.na(mycombfile$rtl_orig)|is.na(mycombfile$toes)),"drop_morphometrics"]<-T
+unique(mycombfile[which(mycombfile$drop_species==T),"species"])
 ```
 ## Create toesbin
 We also handle data for toes:
