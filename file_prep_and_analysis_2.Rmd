@@ -211,17 +211,54 @@ mycombfile<-as.data.frame(sapply(mycombfile,blank2NA))
 ## Identify data for review
 [sex values "male|female"->"m|f", species values "j|v"->"sj|sv", painted values "painted|yes" -> "P" and "[blank]|no" -> "N", new.recap values "new|n"->"N" and "recap|r"->"R".]
 ```{r}
-mycombfile$review_sex<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$sex!="m" & mycombfile$sex!="f"),"review_sex"]<-T
-mycombfile$review_species<-logical(nrow(mycombfile))
-mycombfile[grep("\\?",mycombfile$species),"review_species"]<-T 
-# mycombfile[which(mycombfile$species=="sj"|mycombfile$species=="sv"|mycombfile$species=="v"|mycombfile$species=="j"),"review_species"]<-F
-mycombfile$review_painted<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T#many of these seem to belong in notes column
-mycombfile$review_new.recap<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
-mycombfile$review_rtl<-logical(nrow(mycombfile))
-mycombfile[which(is.na(mycombfile$rtl) & !is.na(mycombfile$rtl_orig)),"review_rtl"]<-T
+#Make this into a more versatile function eventually
+myfilters<-function(){
+        mycombfile$review_sex<-logical(nrow(mycombfile))
+        mycombfile[which(mycombfile$sex!="m" & mycombfile$sex!="f"),"review_sex"]<-T
+        mycombfile$review_species<-logical(nrow(mycombfile))
+        mycombfile[grep("\\?",mycombfile$species),"review_species"]<-T 
+        mycombfile$review_painted<-logical(nrow(mycombfile))
+        mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T#many of these seem to belong in notes column
+        mycombfile$review_new.recap<-logical(nrow(mycombfile))
+        mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
+        mycombfile$review_rtl<-logical(nrow(mycombfile))
+        mycombfile[which(is.na(mycombfile$rtl) & !is.na(mycombfile$rtl_orig)),"review_rtl"]<-T
+        return(mycombfile)
+}
+mycombfile<-myfilters()
+```
+#Reviewing filters
+- The values here can help us to determine observatgions that don't need to be reviewed individually
+```{r}
+#make this a proper function eventually
+review.filters<-function(){
+        review_sex_values<-unique(mycombfile[which(mycombfile$review_sex==T),"sex"])
+        review_species_values<-unique(mycombfile[which(mycombfile$review_species==T),"species"])
+        review_painted_values<-unique(mycombfile[which(mycombfile$review_painted==T),"painted"])
+        review_new.recap_values<-unique(mycombfile[which(mycombfile$review_new.recap==T),"new.recap"])
+        review_rtl_values<-unique(mycombfile[which(mycombfile$review_rtl==T),"rtl_orig"])#fix this 
+        review_sex_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_sex==T),"sex"]),"nchar"=nchar(as.character(review_sex_values)))
+        review_species_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_species==T),"species"]),"nchar"=nchar(as.character(review_species_values)))
+        review_painted_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_painted==T),"painted"]),"nchar"=nchar(as.character(review_painted_values)))
+        review_new.recap_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_new.recap==T),"new.recap"]),"nchar"=nchar(as.character(review_new.recap_values)))
+        review_rtl_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_rtl==T),"rtl"]),"nchar"=nchar(as.character(review_rtl_values)))
+        filter_review<-list("sex"=review_sex_values,"species"=review_species_values,"painted"=review_painted_values,"new.recap"=review_new.recap_values,"rtl"=review_rtl_values)
+        return(filter_review)
+}
+filter_review<-review.filters()
+```
+#Make fixes based on filter review
+```{r}
+mycombfile$forceMale<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$sex=="m "|mycombfile$sex=="male"),"forceMale"]<-T
+mycombfile$forceFemale<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$sex=="f "),"forceFemale"]<-T
+mycombfile$forceRecap<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$new.recap=="recap " | mycombfile$new.recap=="reecap" | mycombfile$new.recap=="r"),"forceRecap"]<-T
+mycombfile$forceNew<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$new.recap=="new "),"forceNew"]<-T
+
+#REsume here - apply the above filters to force changes ]
 ```
 ## Identify data to be dropped
 Here we identify unwanted data and flagging:
@@ -248,4 +285,5 @@ We also handle data for toes:
 # Export mapped dataframe
 ```{r}
 write.xlsx2(mycombfile,"mapped data.xlsx",showNA=T)
+# write.csv2(mycombfile,"mapped data.csv",sep = ",")
 ```

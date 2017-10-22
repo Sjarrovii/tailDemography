@@ -29,10 +29,14 @@ str(mdata)
 ```
 Create a review data frame and export to an excel file.
 ```{r}
-reviewdata<-data.frame(mdata[which((mdata$review_new.recap==T|mdata$review_painted==T|mdata$review_rtl==T|mdata$review_sex==T|mdata$review_species==T)&(mdata$drop_morphometrics==F & mdata$drop_species==F)),])
-str(reviewdata)
-unique(reviewdata$species)
-write.xlsx2(reviewdata,"reviewdata.xlsx",showNA=T)
+# reviewdata<-data.frame(mdata[which((mdata$review_new.recap==T|mdata$review_painted==T|mdata$review_rtl==T|mdata$review_sex==T|mdata$review_species==T)&(mdata$drop_morphometrics==F & mdata$drop_species==F)),])
+reviewdata2<-data.frame(mdata[which(((mdata$review_new.recap==T & mdata$forceNew==F & mdata$forceRecap==F)|mdata$review_painted==T|mdata$review_rtl==T|(mdata$review_sex==T & mdata$forceFemale==F & mdata$forceMale==F)|mdata$review_species==T)&(mdata$drop_morphometrics==F & mdata$drop_species==F )),])
+# str(reviewdata)
+str(reviewdata2)
+# unique(reviewdata$species)
+unique(reviewdata2$species)
+# write.xlsx2(reviewdata,"reviewdata.xlsx",showNA=T)
+write.xlsx2(reviewdata2,"reviewdata2.xlsx",showNA=T)
 ```
 RESUME HERE. Everything below this point was copied from file_prep_and_analysis_2.Rmd before it became file prep and Mapping
 
