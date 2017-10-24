@@ -30,6 +30,7 @@ Next we must read the .xls and .xlsx files into r.  Since each file may have a d
 ```{r}
 myfiles<-list.files( path = "excelFiles",pattern = c(".xls",".xlsx"))
 myfiles_path<-lapply(myfiles,function(x)paste("excelFiles",x,sep = "/"))
+# mydata<-lapply(myfiles_path,function(x) read.xlsx2(x,sheetIndex = 1,colClasses = "character"))
 mydata<-lapply(myfiles_path,function(x) read.xlsx2(x,sheetIndex = 1,colClasses = "character"))
 ```
 
@@ -145,7 +146,7 @@ for(i in 1:length(mydata_vars)){
 ```
 ## Move data to a data frame for analysis
 Now we create a data frame, mycombfile on which analyses will be conducted and reclassify the appropriate variables as numeric variable.  For some reason, they were classified as character vectors during the population of the data.frame.
-First, we will coerce all data to character class to facilitate the merge.  This step can probably be dropped, if the source files have consistent formatting for similar columns.  We will creat a function to do this and then apply the function to each level in the list (i.e. each year)
+First, we will coerce all data to character class to facilitate the merge.  This step can probably be dropped, if the source files have consistent formatting for similar columns.  We will create a function to do this and then apply the function to each level in the list (i.e. each year)
 ```{r}
 forceChar<-function(x){
         if(is.data.frame(x)==T){
@@ -156,7 +157,7 @@ forceChar<-function(x){
 }
 mydata_vars<-lapply(mydata_vars,forceChar)
 ```
-Then we will merge the elements of mydata_vars into a single data frame
+Then we will merge the elements of mydata_vars into a single data frame and force "year" to integer.
 ```{r}
 mycombfile<-data.frame()
 for(i in 1:length(mydata_vars)){
@@ -192,12 +193,19 @@ mycombfile$autotomized<-logical(nrow(mycombfile))
 mycombfile[which(!is.na(mycombfile$rtl_orig) & mycombfile$rtl_orig!="o" & mycombfile$rtl_orig!="0" & mycombfile$rtl_orig!=" 0"),"autotomized"]<-T #don't know why I have to explicitly exclude rtl_orig =" 0" after using trim function
 unique(mycombfile[which(mycombfile$autotomized==T),"rtl_orig"])
 ```
+Change "new.recap" to "new.recap_orig" and create two new columns: "sighting" (character vector which is "sighting" if the encounter was a sighting and NA otherwise) and "new.recap" (a character vector that returns the value of new.recap_orig if "sighting"==TRUE.
+```{r}
+mycombfile$new.recap_orig<-mycombfile$new.recap
+mycombfile$sighting<-rep(NA,nrow(mycombfile))
+mycombfile[which(mycombfile$new.recap=="visual recapture" | mycombfile$new.recap=="sighting" | mycombfile$new.recap=="sighted"|mycombfile$sighing=="sighted"),"sighting"]<-"sighting"
+mycombfile[which(mycombfile$sighting==T),"new.recap"]<-NA 
+```
 ## Convert blanks to NA in all columns
 First create function that converts blank cells to NA
 ```{r}
 blank2NA<-function(x){
         x[which(as.character(x)=="")]<-NA
-        return(x)
+        return(as.character(x))
 }
 ```
 Then apply that function to the columns in mycombfile
@@ -214,11 +222,11 @@ mycombfile<-as.data.frame(sapply(mycombfile,blank2NA))
 #Make this into a more versatile function eventually
 myfilters<-function(){
         mycombfile$review_sex<-logical(nrow(mycombfile))
-        mycombfile[which(mycombfile$sex!="m" & mycombfile$sex!="f"),"review_sex"]<-T
+        mycombfile[which((mycombfile$sex!="m" & mycombfile$sex!="f") & (mycombfile$forceFemale!=T & mycombfile$forceMale!=T)),"review_sex"]<-T
         mycombfile$review_species<-logical(nrow(mycombfile))
         mycombfile[grep("\\?",mycombfile$species),"review_species"]<-T 
         mycombfile$review_painted<-logical(nrow(mycombfile))
-        mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T#many of these seem to belong in notes column
+        mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T
         mycombfile$review_new.recap<-logical(nrow(mycombfile))
         mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
         mycombfile$review_rtl<-logical(nrow(mycombfile))
@@ -228,7 +236,7 @@ myfilters<-function(){
 mycombfile<-myfilters()
 ```
 #Reviewing filters
-- The values here can help us to determine observatgions that don't need to be reviewed individually
+- The values here can help us to determine observations that don't need to be reviewed individually
 ```{r}
 #make this a proper function eventually
 review.filters<-function(){
@@ -243,6 +251,7 @@ review.filters<-function(){
         review_new.recap_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_new.recap==T),"new.recap"]),"nchar"=nchar(as.character(review_new.recap_values)))
         review_rtl_values<-data.frame("value"=unique(mycombfile[which(mycombfile$review_rtl==T),"rtl"]),"nchar"=nchar(as.character(review_rtl_values)))
         filter_review<-list("sex"=review_sex_values,"species"=review_species_values,"painted"=review_painted_values,"new.recap"=review_new.recap_values,"rtl"=review_rtl_values)
+        filter_review<-list("sex"=review_sex_values,"species"=review_species_values,"new.recap"=review_new.recap_values,"rtl"=review_rtl_values)
         return(filter_review)
 }
 filter_review<-review.filters()
@@ -254,7 +263,7 @@ mycombfile[which(mycombfile$sex=="m "|mycombfile$sex=="male"),"forceMale"]<-T
 mycombfile$forceFemale<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$sex=="f "),"forceFemale"]<-T
 mycombfile$forceRecap<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$new.recap=="recap " | mycombfile$new.recap=="reecap" | mycombfile$new.recap=="r"),"forceRecap"]<-T
+mycombfile[which(mycombfile$new.recap=="recap " | mycombfile$new.recap=="reecap" |mycombfile$new.recap=="recapq"| mycombfile$new.recap=="r"),"forceRecap"]<-T
 mycombfile$forceNew<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$new.recap=="new "),"forceNew"]<-T
 
@@ -285,5 +294,4 @@ We also handle data for toes:
 # Export mapped dataframe
 ```{r}
 write.xlsx2(mycombfile,"mapped data.xlsx",showNA=T)
-# write.csv2(mycombfile,"mapped data.csv",sep = ",")
 ```
