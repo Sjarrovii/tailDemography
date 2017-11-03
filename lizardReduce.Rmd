@@ -5,7 +5,7 @@ output: html_notebook
 #This file takes a mapped data file, reduces it and export the reduced file for later analysis
 
 ```{r setup,include=FALSE}
-# rm(list=ls()) #clears the environment
+rm(list=ls()) #clears the environment
 # filefolder="G:/Lizard work for the road/excel files"
 filefolder="C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/Demography"
 knitr::opts_knit$set(root.dir = normalizePath(filefolder)) 
@@ -23,7 +23,8 @@ lapply(mypackages,function(x) library(x,character.only = T))
 ```
 Read in a mapped data file and check names
 ```{r}
-mdata<-read.xlsx2("mapped data.xlsx",sheetIndex = 1)
+# mdata<-read.xlsx("mapped data.xlsx",sheetIndex = 1)
+mdata<-read.csv("mapped data.csv")
 names(mdata)
 str(mdata)
 ```

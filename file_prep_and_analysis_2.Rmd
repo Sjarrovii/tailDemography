@@ -197,8 +197,8 @@ Change "new.recap" to "new.recap_orig" and create two new columns: "sighting" (c
 ```{r}
 mycombfile$new.recap_orig<-mycombfile$new.recap
 mycombfile$sighting<-rep(NA,nrow(mycombfile))
-mycombfile[which(mycombfile$new.recap=="visual recapture" | mycombfile$new.recap=="sighting" | mycombfile$new.recap=="sighted"|mycombfile$sighing=="sighted"),"sighting"]<-"sighting"
-mycombfile[which(mycombfile$sighting==T),"new.recap"]<-NA 
+mycombfile[which(mycombfile$new.recap=="visual recapture" | mycombfile$new.recap_orig=="sighting" | mycombfile$new.recap_orig=="sighted"|mycombfile$new.recap_orig=="sighted"|mycombfile$new.recap_orig=="sighed"),"sighting"]<-"sighting"
+mycombfile[which(mycombfile$sighting=="sighting"),"new.recap"]<-NA 
 ```
 ## Convert blanks to NA in all columns
 First create function that converts blank cells to NA
@@ -293,5 +293,6 @@ We also handle data for toes:
 
 # Export mapped dataframe
 ```{r}
-write.xlsx2(mycombfile,"mapped data.xlsx",showNA=T)
+# write.xlsx2(mycombfile,"mapped data.xlsx",showNA=T)
+write.csv(mycombfile,"mapped data.csv")
 ```
