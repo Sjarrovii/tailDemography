@@ -221,14 +221,16 @@ mycombfile<-as.data.frame(sapply(mycombfile,blank2NA))
 ```{r}
 #Make this into a more versatile function eventually
 myfilters<-function(){
-        mycombfile$review_sex<-logical(nrow(mycombfile))
-        mycombfile[which((mycombfile$sex!="m" & mycombfile$sex!="f") & (mycombfile$forceFemale!=T & mycombfile$forceMale!=T)),"review_sex"]<-T
+        mycombfile$review_sex<-T
+        mycombfile[which(mycombfile$sex=="m" | mycombfile$sex=="f"| mycombfile$forceFemale==T | mycombfile$forceMale==T),"review_sex"]<-T
         mycombfile$review_species<-logical(nrow(mycombfile))
         mycombfile[grep("\\?",mycombfile$species),"review_species"]<-T 
         mycombfile$review_painted<-logical(nrow(mycombfile))
         mycombfile[which(mycombfile$painted!="painted" & mycombfile$painted!="yes" & mycombfile$painted!="" & mycombfile$painted!="no"),"review_painted"]<-T
-        mycombfile$review_new.recap<-logical(nrow(mycombfile))
-        mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
+        # mycombfile$review_new.recap<-logical(nrow(mycombfile))
+        # mycombfile[which(mycombfile$new.recap!="new" & mycombfile$new.recap!="n" & mycombfile$new.recap!="recap" & mycombfile$painted!="r"),"review_new.recap"]<-T
+        mycombfile$review_new.recap<-T
+        mycombfile[which(mycombfile$new.recap=="new" | mycombfile$new.recap=="n" | mycombfile$new.recap=="recap" | mycombfile$painted=="r"),"review_new.recap"]<-F
         mycombfile$review_rtl<-logical(nrow(mycombfile))
         mycombfile[which(is.na(mycombfile$rtl) & !is.na(mycombfile$rtl_orig)),"review_rtl"]<-T
         return(mycombfile)
@@ -267,7 +269,7 @@ mycombfile[which(mycombfile$new.recap=="recap " | mycombfile$new.recap=="reecap"
 mycombfile$forceNew<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$new.recap=="new "),"forceNew"]<-T
 
-#REsume here - apply the above filters to force changes ]
+#Resume here - apply the above filters to force changes ]
 ```
 ## Identify data to be dropped
 Here we identify unwanted data and flagging:
@@ -293,6 +295,5 @@ We also handle data for toes:
 
 # Export mapped dataframe
 ```{r}
-# write.xlsx2(mycombfile,"mapped data.xlsx",showNA=T)
 write.csv(mycombfile,"mapped data.csv")
 ```
