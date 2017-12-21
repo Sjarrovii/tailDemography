@@ -36,7 +36,7 @@ mydata<-list()
 for(i in 1:length(myfiles_path)){
         names_tmp<-names(read.xlsx2(myfiles_path[[i]],sheetIndex=1))
         names_vector<-rep("character",length(names_tmp))
-        names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
+        # names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
         mydata[[i]]<-read.xlsx2(myfiles_path[[i]],sheetIndex = 1,colClasses = names_vector)
         # print(names_vector)
 }
@@ -326,13 +326,18 @@ We also handle data for toes:
 ```{r}
 #FIX THIS
 ```
-change datefrom factor to date
+add 2010 date data back into the dataset
 ```{r}
-mycombfile$date<-asDate(mycombfile$date)
+# data2010<-read.xlsx("./excelFiles/xCC2010x.xlsx",1)
+# names(data2010)<-tolower(names(data2010))
+# test<-merge(mycombfile,data2010$date, by="year")
+# 
+# mycombfile[which(mycombfile$year==2010),"date"]
+# mycombfile$date<-asDate(mycombfile$date)
 ```
 
 # Export mapped dataframe
 ```{r}
-View(mycombfile)
-write.csv(mycombfile,"mapped data.csv")
+filename<-paste("mapped data","_",format(Sys.Date(),"%y-%m-%d"),".csv")
+write.csv(mycombfile,filename)
 ```
