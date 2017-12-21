@@ -13,6 +13,8 @@ filefolder="C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/De
 knitr::opts_knit$set(root.dir = normalizePath(filefolder)) 
 #this is an option we have to use for RMD notebooks otherwise the wd is reset after each chunk is executed
 #setwd(filefolder) #this can be used instead for a regular rscript
+# setwd("C:/Users/test/Documents/GitHub/useful-functions")
+# source("statisticalFunctions.Rmd")
 options(pkgType = "source")
 mypackages=c("rio","ggplot2","stringr","tables","knitr","xlsx","rJava") 
 neededpackages=mypackages[which(!is.element(el=mypackages,set=installed.packages()))]
@@ -30,8 +32,16 @@ Next we must read the .xls and .xlsx files into r.  Since each file may have a d
 ```{r}
 myfiles<-list.files( path = "excelFiles",pattern = c(".xls",".xlsx"))
 myfiles_path<-lapply(myfiles,function(x)paste("excelFiles",x,sep = "/"))
+mydata<-list()
+for(i in 1:length(myfiles_path)){
+        names_tmp<-names(read.xlsx2(myfiles_path[[i]],sheetIndex=1))
+        names_vector<-rep("character",length(names_tmp))
+        names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
+        mydata[[i]]<-read.xlsx2(myfiles_path[[i]],sheetIndex = 1,colClasses = names_vector)
+        # print(names_vector)
+}
+# lapply(mydata, head)
 # mydata<-lapply(myfiles_path,function(x) read.xlsx2(x,sheetIndex = 1,colClasses = "character"))
-mydata<-lapply(myfiles_path,function(x) read.xlsx2(x,sheetIndex = 1,colClasses = "character"))
 ```
 
 ## cleaning the Data
@@ -216,6 +226,10 @@ mycombfile<-as.data.frame(sapply(mycombfile,blank2NA))
 ```{r}
 #Resume Here
 ```
+Individual changes based on reviews
+```{r}
+#Resume Here
+```
 ## Identify data for review
 [sex values "male|female"->"m|f", species values "j|v"->"sj|sv", painted values "painted|yes" -> "P" and "[blank]|no" -> "N", new.recap values "new|n"->"N" and "recap|r"->"R".]
 ```{r}
@@ -259,17 +273,37 @@ review.filters<-function(){
 filter_review<-review.filters()
 ```
 #Make fixes based on filter review
+make filters to force change
 ```{r}
 mycombfile$forceMale<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$sex=="m "|mycombfile$sex=="male"),"forceMale"]<-T
 mycombfile$forceFemale<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$sex=="f "),"forceFemale"]<-T
 mycombfile$forceRecap<-logical(nrow(mycombfile))
-mycombfile[which(mycombfile$new.recap=="recap " | mycombfile$new.recap=="reecap" |mycombfile$new.recap=="recapq"| mycombfile$new.recap=="r"),"forceRecap"]<-T
+mycombfile[which(mycombfile$new.recap=="recap " | mycombfile$new.recap=="reecap" |mycombfile$new.recap=="recapq"| mycombfile$new.recap=="r"|mycombfile$new.recap=="dead"),"forceRecap"]<-T
 mycombfile$forceNew<-logical(nrow(mycombfile))
 mycombfile[which(mycombfile$new.recap=="new "),"forceNew"]<-T
+mycombfile$forceSighting<-logical(nrow(mycombfile))
+mycombfile[which(mycombfile$new.recap=="sighing"|mycombfile$new.recap=="?sighting"|mycombfile$new.recap=="missed"|mycombfile$new.recap=="didn't catch"|mycombfile$new.recap=="not caught"),"forceSighting"]<-T
+```
 
+Apply filters to change values
+```{r}
+mycombfile[which(mycombfile$forceSighting==T),"sighting"]<-"s"
+
+mycombfile[which(mycombfile$forceFemale==T),"sex"]<-"f"
+mycombfile[which(mycombfile$forceMale==T),"sex"]<-"m"
+mycombfile[which(mycombfile$forceNew==T),"new.recap"]<-"n"
+mycombfile[which(mycombfile$forceRecap==T),"new.recap"]<-"r"
 #Resume here - apply the above filters to force changes ]
+```
+
+Add toe.change column (logical) 
+and toe.change.year (numerical) 
+toe.prev (string) 
+fix date column in code /check for data issue fix year column in code/check for data issue
+```{r}
+
 ```
 ## Identify data to be dropped
 Here we identify unwanted data and flagging:
@@ -292,8 +326,13 @@ We also handle data for toes:
 ```{r}
 #FIX THIS
 ```
+change datefrom factor to date
+```{r}
+mycombfile$date<-asDate(mycombfile$date)
+```
 
 # Export mapped dataframe
 ```{r}
+View(mycombfile)
 write.csv(mycombfile,"mapped data.csv")
 ```
