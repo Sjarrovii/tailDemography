@@ -16,7 +16,7 @@ knitr::opts_knit$set(root.dir = normalizePath(filefolder))
 # setwd("C:/Users/test/Documents/GitHub/useful-functions")
 # source("statisticalFunctions.Rmd")
 options(pkgType = "source")
-mypackages=c("rio","ggplot2","stringr","tables","knitr","xlsx","rJava") 
+mypackages=c("stringr","knitr","xlsx","rJava") 
 neededpackages=mypackages[which(!is.element(el=mypackages,set=installed.packages()))]
 if(length(neededpackages>0)){
     install.packages(neededpackages)
@@ -30,16 +30,27 @@ lapply(mypackages,function(x) library(x,character.only = T))
 ## Getting the Data
 Next we must read the .xls and .xlsx files into r.  Since each file may have a different number of columns and different column headers, we cannot simply import them as a data frame.  Instead we will read each file into r as a separate element of a list *mydata*.
 ```{r}
+#read in all but 2010 data
 myfiles<-list.files( path = "excelFiles",pattern = c(".xls",".xlsx"))
+myfiles[-(grep("2010",myfiles))]
+
 myfiles_path<-lapply(myfiles,function(x)paste("excelFiles",x,sep = "/"))
 mydata<-list()
 for(i in 1:length(myfiles_path)){
         names_tmp<-names(read.xlsx2(myfiles_path[[i]],sheetIndex=1))
         names_vector<-rep("character",length(names_tmp))
-        # names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
+        names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
         mydata[[i]]<-read.xlsx2(myfiles_path[[i]],sheetIndex = 1,colClasses = names_vector)
         # print(names_vector)
 }
+
+#read in 2010 data
+names_tmp<-names(read.csv("csvFiles/CC2010-data.csv"))
+names_vector<-rep("character",length(names_tmp))
+names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
+mydata[[length(mydata)+1]]<-read.csv("csvFiles/CC2010-data.csv",colClasses = names_vector)
+
+length(mydata)
 # lapply(mydata, head)
 # mydata<-lapply(myfiles_path,function(x) read.xlsx2(x,sheetIndex = 1,colClasses = "character"))
 ```
@@ -326,18 +337,24 @@ We also handle data for toes:
 ```{r}
 #FIX THIS
 ```
-add 2010 date data back into the dataset
+## fix format of date
+- copy 2010 data tot  a new object
+- copy other data to a new object; convert date to useable format
+- drop 2010 data from mycombfile
+- export two sets of data to google drive and merge in open refine
 ```{r}
-# data2010<-read.xlsx("./excelFiles/xCC2010x.xlsx",1)
-# names(data2010)<-tolower(names(data2010))
-# test<-merge(mycombfile,data2010$date, by="year")
+# mycombfile2010<-mycombfile[which(mycombfile$year==2010),]
+# mycombfileother<-mycombfile[which(mycombfile$year!=2010),]
 # 
-# mycombfile[which(mycombfile$year==2010),"date"]
-# mycombfile$date<-asDate(mycombfile$date)
+# head(mycombfileother$date)
+head(mycombfile)
+unique(mycombfile$year)
 ```
 
 # Export mapped dataframe
 ```{r}
-filename<-paste("mapped data","_",format(Sys.Date(),"%y-%m-%d"),".csv")
-write.csv(mycombfile,filename)
+# filename_2010<-paste("mapped data 2010","_",format(Sys.Date(),"%y-%m-%d"),".csv",sep = "")
+filename_other<-paste("mapped data other","_",format(Sys.Date(),"%y-%m-%d"),".csv",sep = "")
+# write.csv(mycombfile2010,filename_2010)
+write.csv(mycombfile,filename_other)
 ```
