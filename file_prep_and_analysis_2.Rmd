@@ -9,7 +9,8 @@ output:
 ```{r setup, include=FALSE}
 rm(list=ls()) #clears the environment
 # filefolder="G:/Lizard work for the road/excel files"
-filefolder="C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/Demography"
+# filefolder="C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/Demography"
+filefolder="C:/Users/Christopher/Documents/Research"
 knitr::opts_knit$set(root.dir = normalizePath(filefolder)) 
 #this is an option we have to use for RMD notebooks otherwise the wd is reset after each chunk is executed
 #setwd(filefolder) #this can be used instead for a regular rscript
@@ -32,7 +33,7 @@ Next we must read the .xls and .xlsx files into r.  Since each file may have a d
 ```{r}
 #read in all but 2010 data
 myfiles<-list.files( path = "excelFiles",pattern = c(".xls",".xlsx"))
-myfiles[-(grep("2010",myfiles))]
+myfiles<-myfiles[-(grep("2010",myfiles))]
 
 myfiles_path<-lapply(myfiles,function(x)paste("excelFiles",x,sep = "/"))
 mydata<-list()
@@ -43,16 +44,11 @@ for(i in 1:length(myfiles_path)){
         mydata[[i]]<-read.xlsx2(myfiles_path[[i]],sheetIndex = 1,colClasses = names_vector)
         # print(names_vector)
 }
-
 #read in 2010 data
 names_tmp<-names(read.csv("csvFiles/CC2010-data.csv"))
 names_vector<-rep("character",length(names_tmp))
 names_vector[grep("date",names_tmp,ignore.case = T)]<-"Date"
 mydata[[length(mydata)+1]]<-read.csv("csvFiles/CC2010-data.csv",colClasses = names_vector)
-
-length(mydata)
-# lapply(mydata, head)
-# mydata<-lapply(myfiles_path,function(x) read.xlsx2(x,sheetIndex = 1,colClasses = "character"))
 ```
 
 ## cleaning the Data
@@ -152,18 +148,29 @@ for(i in 1:length(rawnames)){
         mydata_vars[[i]]<-mydata_trim[[i]][,which(rawnames[[i]]!="DROP")]#creates new list with kept variables
         names(mydata_vars[[i]])<-rawnames[[i]][which(rawnames[[i]]!="DROP")]#attaches mapped names to mydata_vars
 }
+# length(mydata);length(mydata_trim);length(mydata_vars)
+# nrow(mydata[[18]]);nrow(mydata_trim[[18]]);nrow(mydata_vars[[18]])
+# lapply(mydata_trim,nrow)
+# lapply(mydata_vars,nrow)
+```
+Reorder elements in mydata_vars so that 2010 is in correct chronological order (i.e., 2010 is the 11th element in the list).  You don't need to do this if all data files are imported during the same function call.
+###Currently this is manual but should be automated
+```{r}
+mydata_vars<-mydata_vars[c(1:10,18,11:17)]
+lapply(mydata_vars,function(x) head(x[,"date"]))
 ```
 ### Add in "year" variable
 Now we name add the variable year to each element of the list according the year of data that each element contains.
 ```{r}
-myxls=list.files(path = "C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/Demography/excelFiles",pattern="x.xls")
+myxls=list.files(path = "excelFiles",pattern="x.xls")
 myyears<-strsplit(x=myxls,split = "xCC|x.xls")#creates a vector of the years for the data
 myyears<-sapply(myyears,function(x) x[2])
-
 #creates a variable, year, in each sublist of mydata_vars and populates it with the appropriate year from myyears
 for(i in 1:length(mydata_vars)){
-        mydata_vars[[i]][,"year"]<-myyears[i]
-        }
+        mydata_vars[[i]]["year"]<-rep(myyears[i],nrow(mydata_vars[[i]]))
+}
+lapply(mydata_vars,function(x) head(x["year"]))
+lapply(mydata_vars,nrow)
 ```
 ## Move data to a data frame for analysis
 Now we create a data frame, mycombfile on which analyses will be conducted and reclassify the appropriate variables as numeric variable.  For some reason, they were classified as character vectors during the population of the data.frame.
@@ -349,12 +356,13 @@ We also handle data for toes:
 # head(mycombfileother$date)
 head(mycombfile)
 unique(mycombfile$year)
+# length(mycombfile[])
 ```
 
 # Export mapped dataframe
 ```{r}
 # filename_2010<-paste("mapped data 2010","_",format(Sys.Date(),"%y-%m-%d"),".csv",sep = "")
-filename_other<-paste("mapped data other","_",format(Sys.Date(),"%y-%m-%d"),".csv",sep = "")
+filename<-paste("mapped data all","_",format(Sys.Date(),"%y-%m-%d"),".csv",sep = "")
 # write.csv(mycombfile2010,filename_2010)
-write.csv(mycombfile,filename_other)
+write.csv(mycombfile,filename)
 ```
