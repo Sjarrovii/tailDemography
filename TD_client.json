@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "taildemography",
+  "private_key_id": "4d17e0c79e99882a40a5c5e21de7f1e3f236a80f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCeRXz/HGGYRdYu\n2PuS17zKX3VOpslka23sT8XCpnnBc8q6AwsKVXwgX631gVxGRDYyrs/Fskxwl3J6\nYGJpj7NZUwk69OwKjdaNEEWunNRNYk/3eX4WGQFB/wySV39sdKuTrDDmMQVt2qeV\nxJWL8rlYwju0GhHYeaaCCVapyQ9lYT3yqXvczQM0zqYunFtspaGfll5zqKp45QB1\nvhRlBhPkFhyptMqU8Rfsj4+LEiy+pd5asL6249pgqxohrEHsez2STcGq/iWjuh+7\npvifSbF978QBsGbxHix5sZw2R4FWZ8yrjEEffuIa3hCwOlyHzYPLEnLixKZeFyx5\nFhchw0kbAgMBAAECggEAF9OKL7WME6pfxgmwRbjomOap+D8vjkiF8c9IjDcXmUHf\nQQV4QgQAfbcprw3cYE+ggRzD9pUS4NhLyZR8/Ds/2rCfcRqx9hzIMdBDTTga1dN5\nCl5l1tnI0LCeqeE2M5OUyNRhQCYdFR6Xn/pKMRlHQc9rwX8zNI2LvYO+Yiz8flxa\nV0ZYP9Kho4PDu4ICu7i/Bn/XLjtaItUjTH04jlP1KqQJWsC042vnuTa7qfgEWUbq\n02t2J3G2wu3MC88UlhcwrQ1F7jUK4X44xhz1dwC/E6sANzOFvkHTZDtiNeuQ8+ED\n+zvAbEbm8etiMdQlVCWciz9Us2V+yLfsJBZO8FZboQKBgQDenqrv1fvQW6RzX3Dw\nK/wp5a1z7l8b/rIoxfan2S6JmSihwbr1lTNmlCQDvOuMB/EdZX5AC8aKQF1KiiCa\n03kn+oOfHCcHqKj9LhZgZJfqWo3ma7OIO4uGB7+U6LOIqNERDggIbSTfg7Q10s1n\nO01R+lxxNmgffrTKRZyoA35awwKBgQC2AMnIHf3Xt1gyhEqMyLF9+SXZf0Dur8YD\ntB/uMVKze2srvsT1vd15lKin9102qGbocQMgF2xyuUbvd0oL87N+rMGz06Dbskft\n+WkPsYeIcBToX/ixni3g4LjUDGc3BNNm96ps5xhHYekI3V1pVFAEikrKv8Pl1evH\nwpcXcz2CyQKBgQCZNjoOtgaIb4nOnXDs2ljBvQCTOQrcCX4z8YrAGgidSntcWCiD\nvBuUDYB70hmKVizrPl6VVYVewM1z73xhEgngKdlMN+PksX8cQAvGa3TiJVBjtNvq\ndpCfvdVsdnqZIxY/1phQtE0cR1hPcrVKxtWABf55LCidBGcIjsAyIbVkYQKBgQCS\nFMvgnYHzNKvL0DbuDN+5ltJ0YhlB+z9aFadTTa9tc/AvKm14OK6dOV6tgnQEvOHs\nS1kQ1vwqkN+IsRxzv2UglZTbu07vR4dIUNmsyPdZ4WxGn1FDbwyv5G81c8ccd/ke\nOkdGJa5tDP84KEUjl5KqMj2ZwpV/0lXu/ha7sbl7UQKBgCLQZzJH4CUABAb1ycuy\nyP/MsV+X2EGLuJCacpbNc4AWQcZXwkZq8CU5XBUnx1xldqhH/wm5138lbgwErz87\nuSOqrLVwDJ6qaiEZ7yhMp7MVb//LTFO/r3JDr3swUZvTW+KKOGaO9I6Zyakh9HHl\ncRJukcWmWHA6Yshwh+z36Dzm\n-----END PRIVATE KEY-----\n",
+  "client_email": "taildemography@taildemography.iam.gserviceaccount.com",
+  "client_id": "104645264262387603629",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/taildemography%40taildemography.iam.gserviceaccount.com"
+}

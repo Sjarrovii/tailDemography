@@ -1,0 +1,65 @@
+---
+title: "Summary Analysis of Lizard Data"
+output: html_notebook
+---
+
+The input to this script is a cleaned dataset
+
+In this chunk we set the path, library packages and read in data
+```{r}
+if('ggplot2' %in% installed.packages()){
+    print('ggplot2 is already installed.')
+    }else{
+        install.packages('ggplot2')
+    }
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+wd = 'C:/Users/Christopher/Documents/GitHub/tailDemography'
+if(getwd()==wd){
+    sprintf('You are already in the desired working directory:
+            %s.',getwd())
+}else{
+    setwd('C:/Users/Christopher/Documents/GitHub/tailDemography')
+    sprintf('Working directory is now %s',wd)
+}
+```
+
+```{r}
+df = read.csv('Cleaned Sj data.csv')
+head(df)
+```
+
+# Plot SVL vs TL by year and Autotomy status
+```{r}
+svlTlall = ggplot(aes(x = svl, y = tl), data = df)
+fig_svlTLall = svlTlall + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle('TL vs SVL by Sex and Autotomy Status') +ylab('TL in mm') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth() + theme(plot.title = element_text(hjust = 0.5))
+fig_svlTL= fig_svlTLall +facet_wrap(~year)
+ggsave('SVLvTLall.png',fig_svlTLall)
+ggsave('SVLvTLall.png',fig_svlTL)
+print(fig_svlTLall)
+print(fig_svlTL)
+```
+
+# Plot Recaptured Lizards by sex and year
+```{r}
+# need to show y labels
+recapSexYr = ggplot(aes(x = factor(year),  fill= newRecap), data = df)
+fig_recapSexYr = recapSexYr + geom_bar(aes(fill = newRecap), position = 'fill') + theme(axis.text.x = element_text(angle = 45)) + xlab("Year") + facet_wrap(~sex,nrow = 2)
+ggsave('recapSexYr.png',fig_recapSexYr)
+print(fig_recapSexYr)
+```
+# plot svl by mass and year
+```{r}
+svlMassYearall = ggplot(aes(x = svl, y = mass), data = df)
+fig_svlMassYearall = svlMassYearall + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle('Mass vs SVL by Sex and Autotomy Status') +ylab('Mass in g') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth() + theme(plot.title = element_text(hjust = 0.5))
+fig_svlMassYear= fig_svlMassYearall +facet_wrap(~year)
+ggsave('svlMassYearall.png',fig_svlMassYearall)
+ggsave('svlMassYearall.png',fig_svlMassYear)
+print(fig_svlMassYearall)
+print(fig_svlMassYear)
+```
