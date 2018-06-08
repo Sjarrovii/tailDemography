@@ -1,0 +1,97 @@
+---
+title: "Tail Demography Summary Analyses"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+rm(list=ls()) #clears the environment
+# filefolder="G:/Lizard work for the road/excel files"
+filefolder="C:/Users/test/Documents/Chris/Research/Sceloporus/Caudal Autotomy/Demography"
+knitr::opts_knit$set(root.dir = normalizePath(filefolder)) 
+#this is an option we have to use for RMD notebooks otherwise the wd is reset after each chunk is executed
+#setwd(filefolder) #this can be used instead for a regular rscript
+options(pkgType = "source")
+mypackages=c("ggplot2","tables","knitr","xlsx","rJava") 
+neededpackages=mypackages[which(!is.element(el=mypackages,set=installed.packages()))]
+if(length(neededpackages>0)){
+    install.packages(neededpackages)
+}else{
+    warning("All packages already installed")
+}
+lapply(mypackages,function(x) library(x,character.only = T))
+```
+
+#Summarizing the Data
+
+Here we will create tables and figures to summarize the tail condition in the data. We will create tables of tail condition overall and by year.  One set will include all data points and the other will only include data which are not duplicated.  We will need to create functions MEAN and SD to calculate the arithematic mean and the standard deviation. Excluding NA values and then we will call those functions to generate the tables.  Tables for tail loss in each year will be stored in tables where the names of each element are the names of the years themselves.
+
+First we will add an additional variable, ageclass, a character vector containing designating a lizard as adult or juvenile based on svl and species.
+```{r}
+#RESUME HERE
+mycombfile$ageclass<-"juvenile"
+for(i in 1:nrow(mycombfile)){
+    if((mycombfile[i,"species"]=="sj"& mycombfile[i,"svl"]>=56)|(mycombfile[i,"species"]=="sv" & mycombfile[i,"svl"]>=47)){
+        mycombfile$ageclass<-"adult"
+    }
+}
+
+```
+
+## Generating Summary Tables
+```{r}
+#create functions to exclude na values
+MEAN<-function(x) base::mean(x,na.rm=T)
+SD<-function(x) stats::sd(x,na.rm = T)
+MEDIAN<-function(x) stats::median(x,na.rm = T)
+IR<-function(x) stats::IQR(x,na.rm = T)
+MIN<-function(x) base::min(...,na.rm=T)
+#apply function to generate tables
+morpho_all<-tabular((factor(species)+1)*factor(tailcondition)~(n=1) + Format(digits=2)*(svl+tl+rtl+mass)*(MEAN + SD + MEDIAN + IR),data = mycombfile[which(mycombfile$ageclass=="adult"),])
+
+morpho_all_nodup<-tabular((factor(species)+1)*factor(tailcondition)~(n=1) + Format(digits=2)*(svl+tl+rtl+mass)*(MEAN + SD + MEDIAN + IR),data = mycombfile[which(mycombfile$dupInYear=="No" & mycombfile$ageclass=="adult"),])
+
+#create a list of tables for tailcondition in each year
+morpho_year<-vector(mode = "list",length = length(unique(mycombfile$year)))#create an empty list
+morpho_year_nodup<-vector(mode = "list",length = length(unique(mycombfile$year)))#create an empty list
+
+##create names for each element in the list tailcondition_year
+##assign names to list elements
+names(morpho_year_nodup)<-unique(mycombfile$year)
+names(morpho_year)<-unique(mycombfile$year)
+##Populate list with tables
+for (year in unique(factor(mycombfile$year))){
+    morpho_year[[year]]<-tabular((factor(species)+1)*factor(tailcondition)~(n=1) + Format(digits=2)*(svl+tl+rtl+mass)*(MEAN + SD + MEDIAN + IR),data = mycombfile[which(mycombfile$year==year & mycombfile$ageclass=="adult"),])
+}
+
+for (year in unique(factor(mycombfile$year))){
+    morpho_year_nodup[[year]]<-tabular((factor(species)+1)*factor(tailcondition)~(n=1) + Format(digits=2)*(svl+tl+rtl+mass)*(MEAN + SD + MEDIAN +  IR),data = mycombfile[which(mycombfile$year==year & mycombfile$dupInYear=="No" & mycombfile$ageclass=="adult"),])
+}
+
+Age_Class<-tabular((factor(species)+1)*factor(ageclass)~(n=1) + Format(digits=2)*(svl+tl+rtl+mass)*(MEAN + SD + MEDIAN + IR),data = mycombfile[which(mycombfile$ageclass=="adult"),])
+```
+
+## Generating Summary Figures - FIX THIS block
+```{r}
+TailCondition_Overall<-ggplot(data = mycombfile[which(mycombfile$ageclass=="adult"),],mapping = aes(x=tailcondition))+geom_bar()+ facet_wrap(~species)#Do this as a percentages of the whole of the subgroup
+
+MorphoByTCond_Overall<-ggplot(data = mycombfile[which(mycombfile$ageclass=="adult"),],mapping = aes(x = tailcondition, y=svl))+geom_boxplot()+ facet_wrap(~species)
+
+TailCondition_Overall
+MorphoByTCond_Overall
+# print(morpho_all)
+
+# ggplot(data = mycombfile,mapping = aes(x=tailcondition))+geom_bar()
+# print(morpho_all_nodup)
+# 
+# # ggplot(data = mycombfile,mapping = aes(x=tailcondition))+geom_bar(aes(colour=species))    
+# print(morpho_year)
+# 
+# print(morpho_year_nodup)
+#decision: these are two separate animals. Adjust toes based on notes.
+# mycombfile[816,"toes"]<-"5-6-11-18"
+```
+
+##When two or more records exist within the same year, for the
+##  same animal with the same tail condition category, choose 
+##  the record that has the most recent entry date even if the
+##  tail condition category has changed between records
