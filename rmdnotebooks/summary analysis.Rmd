@@ -19,7 +19,7 @@ library(ggplot2)
 ```
 
 ```{r}
-wd = 'C:/Users/Christopher/Documents/GitHub/tailDemography'
+wd = 'C:/Users/Christopher/Documents/GitHub/tailDemography/data'
 if(getwd()==wd){
     sprintf('You are already in the desired working directory:
             %s.',getwd())
@@ -30,36 +30,72 @@ if(getwd()==wd){
 ```
 
 ```{r}
-df = read.csv('Cleaned Sj data.csv')
+# df = read.csv('../data/Cleaned Sj data.csv')
+df = read.csv('../data/cleaned CC data 2000-2017.csv')
 head(df)
+
+```
+Filter data for analyses
+```{r}
+#remove non sj and sv species and non m and f sexes
+df = df[which((df$species == 'j'|df$species =='v') & (df$sex == 'm'|df$sex =='f')),]
+#create data set that onyl includes first sightings of animals
+df_first = df[which(df$firstSighting=='first'),]
 ```
 
 # Plot SVL vs TL by year and Autotomy status
+- We see more individuals are intact at first capture than are autotomized
 ```{r}
-svlTlall = ggplot(aes(x = svl, y = tl), data = df)
-fig_svlTLall = svlTlall + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle('TL vs SVL by Sex and Autotomy Status') +ylab('TL in mm') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth() + theme(plot.title = element_text(hjust = 0.5))
-fig_svlTL= fig_svlTLall +facet_wrap(~year)
-ggsave('SVLvTLall.png',fig_svlTLall)
-ggsave('SVLvTLall.png',fig_svlTL)
+svlTlall = ggplot(aes(x = svl, y = tl), data = df_first)
+fig_svlTLall = svlTlall + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle('TL vs SVL by Sex and Autotomy Status') +ylab('TL in mm') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth(method = lm) + theme(plot.title = element_text(hjust = 0.5))
+fig_svlTLYear= fig_svlTLall +facet_wrap(~year)
+ggsave('../figures/SVLvTLall.png',fig_svlTLall)
+ggsave('../figures/SVLvTLYear.png', fig_svlTLYear)
 print(fig_svlTLall)
-print(fig_svlTL)
+print(fig_svlTLYear)
+```
+
+```{r}
+for(year in unique(df_first$year)){
+    svlTl = ggplot(aes(x = svl, y = tl), data = df_first[which(df_first$year == year),])
+fig_svlTl = svlTl + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle(paste('TL vs SVL by Sex and Autotomy Status in',year,sep = ' ')) +ylab('TL in mm') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth(method = lm) + theme(plot.title = element_text(hjust = 0.5))
+filename = paste('svlTl_',year,'.png',sep = '')
+mypath = paste('../figures/',filename,sep = '')
+print(mypath)
+ggsave(mypath,fig_svlTl)
+print(fig_svlTl)
+}
+
+
 ```
 
 # Plot Recaptured Lizards by sex and year
+- One question is why there are any individuals here in blue
 ```{r}
 # need to show y labels
-recapSexYr = ggplot(aes(x = factor(year),  fill= newRecap), data = df)
-fig_recapSexYr = recapSexYr + geom_bar(aes(fill = newRecap), position = 'fill') + theme(axis.text.x = element_text(angle = 45)) + xlab("Year") + facet_wrap(~sex,nrow = 2)
-ggsave('recapSexYr.png',fig_recapSexYr)
+recapSexYr = ggplot(aes(x = factor(year),  fill= newRecap), data = df_first[which(df_first$newRecap=='new'|df_first$newRecap=='recap'),])
+fig_recapSexYr = recapSexYr + geom_bar(aes(fill = newRecap), position = 'fill') + theme(axis.text.x = element_text(angle = 45)) + xlab("Year") + ylab("Proportion")+facet_wrap(~sex,nrow = 2)
+ggsave('../figures/recapSexYr.png',fig_recapSexYr)
 print(fig_recapSexYr)
 ```
 # plot svl by mass and year
 ```{r}
-svlMassYearall = ggplot(aes(x = svl, y = mass), data = df)
+svlMassYearall = ggplot(aes(x = svl, y = mass), data = df_first)
 fig_svlMassYearall = svlMassYearall + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle('Mass vs SVL by Sex and Autotomy Status') +ylab('Mass in g') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth() + theme(plot.title = element_text(hjust = 0.5))
 fig_svlMassYear= fig_svlMassYearall +facet_wrap(~year)
-ggsave('svlMassYearall.png',fig_svlMassYearall)
-ggsave('svlMassYearall.png',fig_svlMassYear)
+ggsave('../figures/svlMassYearall.png',fig_svlMassYearall)
+ggsave('../figures/svlMassYear.png',fig_svlMassYear)
 print(fig_svlMassYearall)
 print(fig_svlMassYear)
+
+for(year in unique(df_first$year)){
+    svlMass = ggplot(aes(x = svl, y = mass), data = df_first[which(df_first$year == year),])
+fig_svlMass = svlMass + geom_point(aes(color = factor(sex), shape = factor(autotomized))) + scale_shape( solid = FALSE) + ggtitle(paste('Mass vs SVL by Sex and Autotomy Status',year,sep = '')) +ylab('Mass in g') + xlab('SVL in mm')+ geom_vline(xintercept = 54)  + geom_smooth() + theme(plot.title = element_text(hjust = 0.5)) + xlim(c(0,max(df_first$svl)+10))
+filename = paste('svlMass_',year,'.png',sep = '')
+mypath = paste('../figures/',filename,sep = '')
+print(mypath)
+ggsave(mypath,fig_svlMass)
+print(fig_svlMass)
+}
+
 ```
