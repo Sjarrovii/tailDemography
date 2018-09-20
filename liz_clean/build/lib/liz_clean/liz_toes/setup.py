@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='liz_toes',
-    version='0.1.1dev',
+    version='0.1.0dev',
     author='Christopher Agard',
     author_email='cragard@gmail.com',
     description="Python library for cleaning CC lizard data",
