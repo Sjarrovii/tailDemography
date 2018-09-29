@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../liz_clean/.idea/liz_clean.iml" filepath="$PROJECT_DIR$/../liz_clean/.idea/liz_clean.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/test.iml" filepath="$PROJECT_DIR$/.idea/test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../useful-functions/.idea/useful-functions.iml" filepath="$PROJECT_DIR$/../../useful-functions/.idea/useful-functions.iml" />
     </modules>
   </component>
 </project>
