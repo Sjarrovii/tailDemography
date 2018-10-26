@@ -7,6 +7,6 @@ setup(
     author_email='cragard@gmail.com',
     description="Python library for cleaning CC lizard data",
     packages=find_packages(),
-    scripts=['label_pattern.py', 'make_str.py', 'replace_pattern.py', 'report_pattern.py'],
+    scripts=['label_pattern.py', 'make_str.py', 'replace_pattern.py', 'report_pattern.py', 'setup.py'],
     install_requires=['pandas', 'numpy']
 )
