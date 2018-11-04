@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='functions',
-    version='0.1.1',
+    version='0.1.2',
     author='Christopher Agard',
     author_email='cragard@gmail.com',
     description="Python library for cleaning CC lizard data",

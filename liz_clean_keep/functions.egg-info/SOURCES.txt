@@ -5,15 +5,3 @@ functions.egg-info/SOURCES.txt
 functions.egg-info/dependency_links.txt
 functions.egg-info/requires.txt
 functions.egg-info/top_level.txt
-liz_number/__init__.py
-liz_number/lizsort.py
-liz_number/mindate.py
-liz_number/setup.py
-liz_number/smallest.py
-liz_number/validate.py
-liz_toes/__init__.py
-liz_toes/label_pattern.py
-liz_toes/make_str.py
-liz_toes/replace_pattern.py
-liz_toes/report_pattern.py
-liz_toes/setup.py
