@@ -40,14 +40,13 @@ def xluniquecol2(file, header = 0, verbose=True):
             res = None
     return res
 
-def colmatchtodict(x, series, dictsource, key=None):
+def colmatchtodict(x,series, dictsource, key= None):
     """This takes a string, x, and a looks for values in a series that match that contain that string.
     Those values which match are returned as values in a python dict for the key, key."""
-
-    assert isinstance(series, pd.Series)
+    assert isinstance(series,pd.Series)
     if key is None:
         key = x
-    tmp = series[series.astype(str).str.contains(x, case=False)].tolist()
+    tmp = series[series.astype(str).str.contains(x,case = False)].tolist()
     dictsource[key] = tmp
     return dictsource
 
@@ -64,6 +63,43 @@ def findsyn (name,dictionary, verbose = True):
         if verbose == True:
             print("No value matching \"{}\" was found in the dictionary.".format(name))
     return res
+
+def readnsplit(file,newsourcefolder,dtype=None,verbose=True):
+    """
+    This function reads an excel file, splits its sheets into separate files and saves them to folder
+    *newsourcefolder*.
+    """
+    suffix = '.'+file.split('.')[1]
+    prefix = file[:-len(suffix)]
+    for sheet in pd.ExcelFile(file).sheet_names:
+        try:
+            splitfile = newsourcefolder+'/'+prefix+'_'+sheet+suffix
+            pd.read_excel(file,dtype=dtype, sheet_name=sheet).to_excel(splitfile,index=False)
+            if verbose==True:
+                print("Succes!  \'{}\',sheet \'{}\' has been saved to {} and the corresponding\
+                google drive file as {}.".format(file,sheet,newsourcefolder,splitfile))
+            continue
+        except:
+            print("Unable to save \'{}\',sheet \'{}\' as a separate file.".format(file,sheet))
+
+def mapndrop(df,dictionary,verbose=True):
+    """
+    This function renames columns in *df* deemed synonymous according to a dict,
+    *dictionary*, and drops unnecessary columns before returning the cleaner dataframe.
+    """
+    try:
+        df.columns = pd.Series(df.columns).map(lambda x:dictionary[x])
+        tmp = df
+        if verbose==True:
+            print("Successfully mapped columns for df.")
+        dropidx =[None==col for col in list(tmp.columns)]
+        tmp=tmp.drop(columns=df.columns[dropidx])
+        if verbose==True:
+            print("Successfully dropped unnecessary columns for df.")
+    except:
+        tmp = None
+        print("Skipping mapndrop call for df.")
+    return tmp
 
 def readnclean(x, dictionary, dtype=None):
     """
