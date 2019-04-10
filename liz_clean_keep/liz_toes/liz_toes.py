@@ -20,10 +20,15 @@ def make_str(x):
     return x
 
 
-def replace_pattern(x, pattern, pattern_b, source_col, replacement):
+def replace_pattern(x, pattern_b, replacement):
     """searches a pandas series for a regex expression, pattern, and replaces with replacement"""
 
-    return x.loc[x[source_col].str.match(pattern) is True, source_col].str.replace(pattern_b, replacement)
+    try:
+        res = x.strip().replace(pattern_b,replacement)
+    except:
+        res = x
+        # insert logging
+    return res
 
 
 def report_pattern(x, pattern, col, return_type):
