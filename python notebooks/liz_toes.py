@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import logging
 
 
 def label_pattern(x, pat_num, pattern, pat_col='toe_pattern', col='toes'):
@@ -23,14 +24,16 @@ def make_str(x):
     return x
 
 
-def replace_pattern(x, pattern_b, replacement):
+def replace_pattern(x, source_col, pattern_b, replacement):
     """searches a pandas series for a regex expression, pattern, and replaces with replacement"""
 
+    # myException = (TypeError,ValueError,AttributeError,NameError,KeyError,IndexError,
+    #                UnboundLocalError,AssertionError,ModuleNotFoundError)
     try:
-        res = x.strip().replace(pattern_b, replacement)
-    except "This doesn't work":
+        res = x[source_col].strip().replace(pattern_b, replacement)
+    except Exception as e:
+        logging.error("Replacement failed.")
         res = x
-        # insert logging
     return res
 
 
