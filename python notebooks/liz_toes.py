@@ -43,13 +43,20 @@ def replace_pattern(x, source_col, pattern_b, replacement, action):
     return res
 
 
-def report_pattern(x, pattern_col, source_col, report_type):
+def report_pattern(x, pattern_col, pattern_num_col, source_col, report_type):
     """searches a pandas series for a regex expression, pattern, and replaces with replacement"""
     col = x[source_col]
+    res = pd.DataFrame()
+    print(x[pattern_col].unique())
     for pattern in x[pattern_col].unique():
         try:
-            res = '{}:\ntoe pattern {}:{}'.format(report_type, pattern, (x[col].str.match(pattern) is True)
-                                           .sum())
-    except Exception as e:
-        logging.error("Reporting failed")
+            logging.info("report_pattern succeeded for {} - {}.".format(x.loc[x[pattern_col] == pattern,
+                                                                              pattern_num_col], pattern))
+            res = res.append('{}:\ntoe pattern {}:{}'.format(report_type, pattern, (x[col].str.match(pattern) is True)\
+                                                             .sum()))
+            print(res)
+        except Exception as e:
+            logging.error("report_pattern failed for {} - {}.".format(x.loc[x[pattern_col] == pattern,
+                                                                            pattern_num_col], pattern))
+            # res = res
     return res
